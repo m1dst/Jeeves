@@ -15,6 +15,7 @@ Hardware
 * 5M string of WS2812 LEDs (300) (12v) ~ £15
 * 5v DC/DC to power the ESP from 12v
 * Small plastic enclosure.
+* Smoothing Capacitor - Connect a big capacitor from power to ground. A cap between 100µF and 1000µF should be good.
 
 It is important to use 12V LEDs and power them directly.  You will not be able to power these from the ESP device.  Also consider that you can use even longer runs of LEDs by purchasing another string and plugging it into the end of the original.  The only thing to consider is the volt drop so be prepared to feed 12v directly into each string.  If you don't then you will find the LEDs may sparkle or not show the colour you are expecting.
 
