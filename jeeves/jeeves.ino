@@ -51,7 +51,7 @@ void setup()
             Serial.println("Attempting to connect.");
         }
         else if (WiFi.status() == WL_NO_SSID_AVAIL) {
-            Serial.println("No SSIS available.");
+            Serial.println("No SSID available.");
         }
         else if (WiFi.status() == WL_SCAN_COMPLETED) {
             Serial.println("WIFI scan completed.");
