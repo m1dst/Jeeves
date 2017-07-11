@@ -105,6 +105,25 @@ void loop()
         ws2812fx.setMode(FX_MODE_STATIC);
         last_change = now;
     }
+
+    if (WiFi.status() == WL_IDLE_STATUS) {
+        Serial.println("Attempting to connect.");
+    }
+    else if (WiFi.status() == WL_NO_SSID_AVAIL) {
+        Serial.println("No SSID available.");
+    }
+    else if (WiFi.status() == WL_SCAN_COMPLETED) {
+        Serial.println("WIFI scan completed.");
+    }
+    else if (WiFi.status() == WL_CONNECT_FAILED) {
+        Serial.println("Could not connect to WIFI.");
+    }
+    else if (WiFi.status() == WL_CONNECTION_LOST) {
+        Serial.println("Connection to WIFI has been lost.");
+    }
+    else if (WiFi.status() == WL_DISCONNECTED) {
+        Serial.println("WIFI disconnected.");
+    }
 }
 
 // Returns the value of an xml parameter from the supplied string
