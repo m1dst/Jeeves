@@ -23,6 +23,9 @@ unsigned long now = 0;
 void setup()
 {
 
+    pinMode(RELAY_PIN, OUTPUT);
+    digitalWrite(RELAY_PIN, HIGH);
+
     // Write the splash screen out to the serial port.
     Serial.begin(115200);
     Serial.println();
