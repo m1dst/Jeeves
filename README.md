@@ -11,11 +11,15 @@ My installation now requires no setup for a contest other than plugging into a 1
 
 Hardware
 --------
-* ESP8266 - I used a WeMos D1 Mini v2 ~ £3.50
+* ESP8266 - I used a WeMos D1 Mini ~ £3.50
+* 5V Relay Module ~ £2.50
 * 5M string of WS2812 LEDs (300) (12v) ~ £15
 * 5v DC/DC to power the ESP from 12v
-* Small plastic enclosure.
-* Smoothing Capacitor - Connect a big capacitor from power to ground. A cap between 100µF and 1000µF should be good.
+* Small plastic enclosure.  I 3D printed mine including the powerpole clamps.  STL available if requested.
+* Smoothing Capacitor - Connect a big capacitor from power to ground (LEDs). A cap between 100µF and 1000µF should be OK.
+* [Mains powered bell](https://www.amazon.co.uk/gp/product/B008SOJO9S) - a 12V bell is more ideal but I couldn't find one at a reasonable price. ~ £9.00
+
+It might be possible to use one of the ESP8266 boards available with a built in relay if you can ensure that you can access spare IO pins to run the LEDs.
 
 It is important to use 12V LEDs and power them directly.  You will not be able to power these from the ESP device.  Also consider that you can use even longer runs of LEDs by purchasing another string and plugging it into the end of the original.  The only thing to consider is the volt drop so be prepared to feed 12v directly into each string.  If you don't then you will find the LEDs may sparkle or not show the colour you are expecting.
 
@@ -23,15 +27,21 @@ Setup
 -----
 * Set your SSID and password by changing the const values.
 * Change LED_COUNT to match the number LEDs in your string.
+* Validate that the data pins in the config represent the pins you are connecting to.
 * If you DO NOT want the lights to indicate a non mult QSO was logged, comment out the DISPLAY_EVERY_QSO definition at the top of the sketch.
 
+Video
+-----
+A video is available on [YouTube](https://youtu.be/TC27MBxHUzQ) which shows a working example of Jeeves. [https://youtu.be/TC27MBxHUzQ](https://youtu.be/TC27MBxHUzQ)
+
+3D Printed case with bell
+![Example hardware](JeevesWithPrintedCase.jpg)
+
+Original prototype
 ![Example hardware](hardware.jpg)
 
 Future Expansion Ideas
 ----------------------
-* Audible bell.  Suggest the duration is for a very short period of time, perhaps 100ms would be enough to trigger the hammer to sound once.
-Could also be used to warn about shift changes?  10 minute warning etc?
-
 * Sniff the current score broadcasts and perhaps expose to a responsive web interface.
 
 * The default state of the LED string is white which is perfect for lighting in a tent.  Lighting may not be required during day.
