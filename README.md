@@ -30,6 +30,8 @@ Setup
 * Validate that the data pins in the config represent the pins you are connecting to.
 * If you DO NOT want the lights to indicate a non mult QSO was logged, comment out the DISPLAY_EVERY_QSO definition at the top of the sketch.
 
+![Hookup Guide](Hookup.jpg)
+
 Video
 -----
 A video is available on [YouTube](https://youtu.be/TC27MBxHUzQ) which shows a working example of Jeeves. [https://youtu.be/TC27MBxHUzQ](https://youtu.be/TC27MBxHUzQ)
