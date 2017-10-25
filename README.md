@@ -29,6 +29,7 @@ Setup
 * Change LED_COUNT to match the number LEDs in your string.
 * Validate that the data pins in the config represent the pins you are connecting to.
 * If you DO NOT want the lights to indicate a non mult QSO was logged, comment out the DISPLAY_EVERY_QSO definition at the top of the sketch.
+* Validate that you have N1MM+ configured for [network broadcasts](http://n1mm.hamdocs.com/tiki-index.php?page=UDP+Broadcasts).
 
 ![Hookup Guide](Hookup.jpg)
 
