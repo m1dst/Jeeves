@@ -2,20 +2,20 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-#define LED_COUNT 300   // Change this to the number of lights in your string.
-#define LED_PIN 2       // This is the pin the data line is connected to.
-#define RELAY_PIN 4       // This is the pin the relay line is connected to.
-#define TIMER_MS 2500   // The duration in ms that the pattern displays for.
-#define RELAY_TIMER_MS 25   // The duration in ms that the pattern displays for.
-#define DISPLAY_EVERY_QSO  // Comment out this line if you DO NOT want a pattern to show for a non mult.
+#define LED_COUNT           300         // Change this to the number of lights in your string.
+#define LED_PIN             2           // This is the pin the data line is connected to.
+#define RELAY_PIN           4           // This is the pin the relay line is connected to.
+#define TIMER_MS            2500        // The duration in ms that the pattern displays for.
+#define RELAY_TIMER_MS      25          // The duration in ms that the relay operates for.
+#define DISPLAY_EVERY_QSO               // Comment out this line if you DO NOT want a pattern to show for a non mult.
 
-const char* ssid = "yourSSID";   // Change this to match your SSID.
-const char* password = "yourPASSWORD";  // Change this to the passwod of your wifi network.
+const char* ssid = "yourSSID";        // Change this to match your SSID.
+const char* password = "yourPASSWORD";    // Change this to the passwod of your wifi network.
 
 // Global variables
 WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 WiFiUDP Udp;
-unsigned int localUdpPort = 12060;  // The default N1MM+ UDP broadcast port.  Change if you are not using defaults.
+unsigned int localUdpPort = 12060;      // The default N1MM+ UDP broadcast port.  Change if you are not using defaults.
 char incomingPacket[2000];
 unsigned long last_change = 0;
 unsigned long now = 0;
