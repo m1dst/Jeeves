@@ -11,8 +11,8 @@
 #define RELAY_INVERTED                  // I am driving my relay with a transistor so the output is inverted.
                                         // Comment out if you don't require the inversion.
 
-const char* ssid = "yourSSID";        // Change this to match your SSID.
-const char* password = "yourPASSWORD";    // Change this to the passwod of your wifi network.
+const char* ssid = "yourSSID";          // Change this to match your SSID.
+const char* password = "yourPASSWORD";  // Change this to the passwod of your wifi network.
 
 // Global variables
 WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
