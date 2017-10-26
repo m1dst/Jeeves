@@ -8,6 +8,8 @@
 #define TIMER_MS            2500        // The duration in ms that the pattern displays for.
 #define RELAY_TIMER_MS      25          // The duration in ms that the relay operates for.
 #define DISPLAY_EVERY_QSO               // Comment out this line if you DO NOT want a pattern to show for a non mult.
+#define RELAY_INVERTED                  // I am driving my relay with a transistor so the output is inverted.
+                                        // Comment out if you don't require the inversion.
 
 const char* ssid = "yourSSID";        // Change this to match your SSID.
 const char* password = "yourPASSWORD";    // Change this to the passwod of your wifi network.
@@ -24,7 +26,7 @@ void setup()
 {
 
     pinMode(RELAY_PIN, OUTPUT);
-    digitalWrite(RELAY_PIN, HIGH);
+    soundBell(false);
 
     // Write the splash screen out to the serial port.
     Serial.begin(115200);
@@ -106,14 +108,13 @@ void loop()
 
     // Detect if the bell has been running for the configured length of time and reset the relay if it has.
     if (now - last_change > RELAY_TIMER_MS) {
-        digitalWrite(RELAY_PIN, HIGH);
+        soundBell(false);
     }
 
     // Detect if the pattern has been running for the configured length of time and reset the pattern if it has.
     if (now - last_change > TIMER_MS) {
         ws2812fx.setColor(0xFFFFFF);
         ws2812fx.setMode(FX_MODE_STATIC);
-        digitalWrite(RELAY_PIN, HIGH);
         last_change = now;
     }
 
@@ -167,45 +168,45 @@ void processN1MMPacket()
             // Set the LEDs to be all on and red.
             ws2812fx.setColor(0xFF0000);
             ws2812fx.setMode(FX_MODE_STATIC);
-            digitalWrite(RELAY_PIN, LOW); 
+            soundBell(true);
             last_change = now;
         }
         else if (isMultiplier1 == "0" && isMultiplier2 == "1" && isMultiplier3 == "0") {
             // Set the LEDs to be all on and blue.
             ws2812fx.setColor(0x0000FF);
             ws2812fx.setMode(FX_MODE_STATIC);
-            digitalWrite(RELAY_PIN, LOW); 
+            soundBell(true);
             last_change = now;
         }
         else if (isMultiplier1 == "0" && isMultiplier2 == "0" && isMultiplier3 == "1") {
             // Set the LEDs to be all on and green.
             ws2812fx.setColor(0x00FF00);
             ws2812fx.setMode(FX_MODE_STATIC);
-            digitalWrite(RELAY_PIN, LOW); 
+            soundBell(true);
             last_change = now;
         }
         else if (isMultiplier1 == "1" && isMultiplier2 == "1" && isMultiplier3 == "0") {
             // Red & Blue
             ws2812fx.setMode(FX_MODE_RUNNING_RED_BLUE);
-            digitalWrite(RELAY_PIN, LOW); 
+            soundBell(true);
             last_change = now;
         }
         else if (isMultiplier1 == "0" && isMultiplier2 == "1" && isMultiplier3 == "1") {
             //Green & Blue
             ws2812fx.setMode(FX_MODE_RUNNING_GREEN_BLUE);
-            digitalWrite(RELAY_PIN, LOW); 
+            soundBell(true);
             last_change = now;
         }
         else if (isMultiplier1 == "1" && isMultiplier2 == "0" && isMultiplier3 == "1") {
             // Red & Green
             ws2812fx.setMode(FX_MODE_MERRY_CHRISTMAS);
-            digitalWrite(RELAY_PIN, LOW); 
+            soundBell(true);
             last_change = now;
         }
         else if (isMultiplier1 == "1" && isMultiplier2 == "1" && isMultiplier3 == "1") {
             // Rainbow
             ws2812fx.setMode(FX_MODE_CHASE_RAINBOW);
-            digitalWrite(RELAY_PIN, LOW); 
+            soundBell(true);
             last_change = now;
         }
         #ifdef DISPLAY_EVERY_QSO
@@ -218,10 +219,19 @@ void processN1MMPacket()
             // Set the LEDs to be all on and white.
             ws2812fx.setColor(0xFFFFFF);
             ws2812fx.setMode(FX_MODE_STATIC);
-            digitalWrite(RELAY_PIN, HIGH); 
+            soundBell(false);
             last_change = now;
         }
         #endif
 
     }
+}
+
+void soundBell(bool enable)
+{
+    #ifdef RELAY_INVERTED
+    digitalWrite(RELAY_PIN, !enable); 
+    #else
+    digitalWrite(RELAY_PIN, enable); 
+    #endif
 }
