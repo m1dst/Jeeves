@@ -8,6 +8,7 @@
 #define TIMER_MS            2500        // The duration in ms that the pattern displays for.
 #define RELAY_TIMER_MS      25          // The duration in ms that the relay operates for.
 #define DISPLAY_EVERY_QSO               // Comment out this line if you DO NOT want a pattern to show for a non mult.
+//#define SOUND_EVERY_QSO                 // Comment out this line if you DO NOT want the bell to ring for each QSO.
 #define RELAY_INVERTED                  // I am driving my relay with a transistor so the output is inverted.
                                         // Comment out if you don't require the inversion.
 
@@ -209,9 +210,14 @@ void processN1MMPacket()
             soundBell(true);
             last_change = now;
         }
-        #ifdef DISPLAY_EVERY_QSO
+        #ifdef DISPLAY_EVERY_QSO || SOUND_EVERY_QSO
         else {
+            #ifdef DISPLAY_EVERY_QSO
             ws2812fx.setMode(FX_MODE_RUNNING_LIGHTS);
+            #endif
+            #ifdef SOUND_EVERY_QSO
+            soundBell(true);
+            #endif
             last_change = now;
         }
         #else
