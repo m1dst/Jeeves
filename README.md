@@ -29,7 +29,7 @@ Setup
 * Change LED_COUNT to match the number LEDs in your string.
 * Validate that the data pins in the config represent the pins you are connecting to.
 * If you DO NOT want the lights to indicate a non mult QSO was logged, comment out the DISPLAY_EVERY_QSO definition at the top of the sketch.
-* I am using a relay driven with an optoisolator and transistor.  This means when I want to enable the relay I set the output to LOW.  This is the opposite value when driving the relay just with the digital pin alone.  If you are just driving a plain relay then comment out the define statement for RELAY_INVERTED.
+* I am using a relay driven with an optoisolator and transistor.  This means when I want to enable the relay I set the output to LOW.  This is the opposite value required if you were driving a small sounder with just with the digital pin alone.  If you are just driving a sounder/buzzer, then comment out the define statement for RELAY_INVERTED.
 * Validate that you have N1MM+ configured for [network broadcasts](http://n1mm.hamdocs.com/tiki-index.php?page=UDP+Broadcasts).
 
 ![Hookup Guide](Hookup.jpg)
