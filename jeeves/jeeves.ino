@@ -1,243 +1,206 @@
+/*
+  Jeeves v1.2 - The wireless, automated mult bell.
+-----------------------------------------------------------
+  http://m1dst.co.uk
+  2017-07 by M1DST
+
+              _     _     _                    _    
+    _ __ ___ / | __| |___| |_   ___ ___  _   _| | __
+   | '_ ` _ \| |/ _` / __| __| / __/ _ \| | | | |/ /
+   | | | | | | | (_| \__ \ |_ | (_| (_) | |_| |   < 
+   |_| |_| |_|_|\__,_|___/\__(_)___\___(_)__,_|_|\_\
+                                                     
+                                                   
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Features:
+Support inputs
+  * N1MM+
+  * Win-Test
+
+Outputs
+  * Relay to drive a bell.
+  * Collection of WS2812 LEDs.
+
+  Changelog
+  ---------
+  2017-07 Initial version.  Drives LEDs and supports N1MM+
+  2017-10 Add support for a relay/bell, trigger light/bell on each QSO (configurable)
+  2017-11 Add full support for Win-Test
+  
+*/
+
+/* =======================================================================================
+   All configuration should be made to configuration.h
+   ======================================================================================= */
+
+#include "configuration.h"
+#include "globals.h"
+#ifdef ENABLE_WINTEST
+#include "wintest.h"
+#endif
+#ifdef ENABLE_N1MM
+#include "n1mm.h"
+#endif
+#ifdef ENABLE_LEDS
 #include "WS2812FX.h"
+#endif
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-#define LED_COUNT           300         // Change this to the number of lights in your string.
-#define LED_PIN             2           // This is the pin the data line is connected to.
-#define RELAY_PIN           4           // This is the pin the relay line is connected to.
-#define TIMER_MS            2500        // The duration in ms that the pattern displays for.
-#define RELAY_TIMER_MS      25          // The duration in ms that the relay operates for.
-#define DISPLAY_EVERY_QSO               // Comment out this line if you DO NOT want a pattern to show for a non mult.
-//#define SOUND_EVERY_QSO                 // Comment out this line if you DO NOT want the bell to ring for each QSO.
-#define RELAY_INVERTED                  // I am driving my relay with a transistor so the output is inverted.
-                                        // Comment out if you don't require the inversion.
-
-const char* ssid = "yourSSID";          // Change this to match your SSID.
-const char* password = "yourPASSWORD";  // Change this to the passwod of your wifi network.
-
 // Global variables
+
+#ifdef ENABLE_WINTEST
+WinTest wintest;
+#endif
+
+#ifdef ENABLE_N1MM
+N1MM n1mm;
+#endif
+
 WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
-WiFiUDP Udp;
-unsigned int localUdpPort = 12060;      // The default N1MM+ UDP broadcast port.  Change if you are not using defaults.
-char incomingPacket[2000];
 unsigned long last_change = 0;
 unsigned long now = 0;
 
 void setup()
 {
 
-    pinMode(RELAY_PIN, OUTPUT);
-    soundBell(false);
+  pinMode(RELAY_PIN, OUTPUT);
+  soundBell(false);
 
-    // Write the splash screen out to the serial port.
-    Serial.begin(115200);
-    Serial.println();
-    Serial.println();
-    Serial.println();
-    Serial.println();
-    Serial.println("Jeeves v1.0.0 - James Patterson (M1DST) - June 2017");
-    Serial.println("Website: http://www.m1dst.co.uk");
-    Serial.println("Twitter: @m1dst");
+  Serial.begin(115200);
 
-    // Setup the LED string to white with a brightness of about 60%
-    ws2812fx.init();
-    ws2812fx.setBrightness(150);
-    ws2812fx.setSpeed(255);
-    ws2812fx.setColor(0xFFFFFF);
-    ws2812fx.setMode(FX_MODE_STATIC);
-    ws2812fx.start();
-    ws2812fx.service();
+  // Write the splash screen out to the serial port.
+  displaySplash();
 
-    // Start connecting to the WIFI network.
-    WiFi.begin(ssid, password);
+#ifdef ENABLE_LEDS
+  // Setup the LED string to white with a brightness of about 60%
+  ws2812fx.init();
+  ws2812fx.setBrightness(150);
+  ws2812fx.setSpeed(255);
+  ws2812fx.setColor(0xFFFFFF);
+  ws2812fx.setMode(FX_MODE_STATIC);
+  ws2812fx.start();
+  ws2812fx.service();
+#endif
 
-    Serial.println("Connecting...");
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
+  // Start connecting to the WIFI network.
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-        if (WiFi.status() == WL_IDLE_STATUS) {
-            Serial.println("Attempting to connect.");
-        }
-        else if (WiFi.status() == WL_NO_SSID_AVAIL) {
-            Serial.println("No SSID available.");
-        }
-        else if (WiFi.status() == WL_SCAN_COMPLETED) {
-            Serial.println("WIFI scan completed.");
-        }
-        else if (WiFi.status() == WL_CONNECT_FAILED) {
-            Serial.println("Could not connect to WIFI.");
-        }
-        else if (WiFi.status() == WL_CONNECTION_LOST) {
-            Serial.println("Connection to WIFI has been lost.");
-        }
-        else if (WiFi.status() == WL_DISCONNECTED) {
-            Serial.println("WIFI disconnected.");
-        }
+  Serial.println("Connecting...");
+  while (WiFi.status() != WL_CONNECTED) {
+
+    delay(500);  // Add an initial delay to give the processor time to init.
+
+    if (WiFi.status() == WL_IDLE_STATUS) {
+      Serial.println("Attempting to connect.");
     }
-    Serial.println();
+    else if (WiFi.status() == WL_NO_SSID_AVAIL) {
+      Serial.println("No SSID available.");
+    }
+    else if (WiFi.status() == WL_SCAN_COMPLETED) {
+      Serial.println("WIFI scan completed.");
+    }
+    else if (WiFi.status() == WL_CONNECT_FAILED) {
+      Serial.println("Could not connect to WIFI.");
+    }
+    else if (WiFi.status() == WL_CONNECTION_LOST) {
+      Serial.println("Connection to WIFI has been lost.");
+    }
+    else if (WiFi.status() == WL_DISCONNECTED) {
+      Serial.println("Not connected.");
+    }
+  }
+  Serial.println();
 
-    // Report the IP address of the device to the serial port.
-    Serial.print("Connected, IP address: ");
-    Serial.println(WiFi.localIP());
+  // Report the IP address of the device to the serial port.
+  Serial.print("Connected, IP address: ");
+  Serial.println(WiFi.localIP());
 
-    // Start listening to UDP traffic on the specified port.
-    Udp.begin(localUdpPort);
+#ifdef ENABLE_WINTEST
+  wintest.startListening();
+#endif
+
+#ifdef ENABLE_N1MM
+  n1mm.startListening();
+#endif
+
+  Serial.println();
 }
 
 void loop()
 {
-    now = millis();
+  now = millis();
 
-    ws2812fx.service();
+#ifdef ENABLE_LEDS
+  ws2812fx.service();
+#endif
 
-    int packetSize = Udp.parsePacket();
-    if (packetSize) {
+#ifdef ENABLE_WINTEST
+  wintest.service();
+#endif
 
-        // Report that a packet was received to the serial port. (for debug purposes)
-        Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
-        int len = Udp.read(incomingPacket, packetSize);
-        if (len > 0) {
-            incomingPacket[len] = 0;
-        }
+#ifdef ENABLE_N1MM
+  n1mm.service();
+#endif
 
-        // Display the contents of the packet (for debug purposes)
-        //Serial.printf("UDP packet contents: %s\n", incomingPacket);
-        //Serial.println();
+#ifdef ENABLE_AUDIBLE
+  // Detect if the bell has been running for the configured length of time and reset the relay if it has.
+  if (now - last_change > RELAY_TIMER_MS) {
+    soundBell(false);
+  }
+#endif
 
-        processN1MMPacket();
-    }
+#ifdef ENABLE_LEDS
+  // Detect if the pattern has been running for the configured length of time and reset the pattern if it has.
+  if (now - last_change > LED_TIMER_MS) {
+    ws2812fx.setColor(0xFFFFFF);
+    ws2812fx.setMode(FX_MODE_STATIC);
+    last_change = now;
+  }
+#endif
 
-    // Detect if the bell has been running for the configured length of time and reset the relay if it has.
-    if (now - last_change > RELAY_TIMER_MS) {
-        soundBell(false);
-    }
-
-    // Detect if the pattern has been running for the configured length of time and reset the pattern if it has.
-    if (now - last_change > TIMER_MS) {
-        ws2812fx.setColor(0xFFFFFF);
-        ws2812fx.setMode(FX_MODE_STATIC);
-        last_change = now;
-    }
-
-    if (WiFi.status() == WL_IDLE_STATUS) {
-        Serial.println("Attempting to connect.");
-    }
-    else if (WiFi.status() == WL_NO_SSID_AVAIL) {
-        Serial.println("No SSID available.");
-    }
-    else if (WiFi.status() == WL_SCAN_COMPLETED) {
-        Serial.println("WIFI scan completed.");
-    }
-    else if (WiFi.status() == WL_CONNECT_FAILED) {
-        Serial.println("Could not connect to WIFI.");
-    }
-    else if (WiFi.status() == WL_CONNECTION_LOST) {
-        Serial.println("Connection to WIFI has been lost.");
-    }
-    else if (WiFi.status() == WL_DISCONNECTED) {
-        Serial.println("WIFI disconnected.");
-    }
+  if (WiFi.status() == WL_IDLE_STATUS) {
+    Serial.println("Attempting to connect.");
+  }
+  else if (WiFi.status() == WL_NO_SSID_AVAIL) {
+    Serial.println("No SSID available.");
+  }
+  else if (WiFi.status() == WL_SCAN_COMPLETED) {
+    Serial.println("WIFI scan completed.");
+  }
+  else if (WiFi.status() == WL_CONNECT_FAILED) {
+    Serial.println("Could not connect to WIFI.");
+  }
+  else if (WiFi.status() == WL_CONNECTION_LOST) {
+    Serial.println("Connection to WIFI has been lost.");
+  }
+  else if (WiFi.status() == WL_DISCONNECTED) {
+    Serial.println("WIFI disconnected.");
+  }
 }
 
-// Returns the value of an xml parameter from the supplied string
-String xmlTakeParam(String inStr, String needParam)
+void displaySplash()
 {
-    if (inStr.indexOf("<" + needParam + ">") > 0) {
-        int CountChar = needParam.length();
-        int indexStart = inStr.indexOf("<" + needParam + ">");
-        int indexStop = inStr.indexOf("</" + needParam + ">");
-        return inStr.substring(indexStart + CountChar + 2, indexStop);
-    }
-    return "";
+  Serial.println("\n\n\n       _                           ");
+  Serial.println("      | |                          ");
+  Serial.println("      | | ___  _____   _____  ___  ");
+  Serial.println("  _   | |/ _ \\/ _ \\ \\ / / _ \\/ __| ");
+  Serial.println(" | |__| |  __/  __/\\ V /  __/\\__ \\ ");
+  Serial.println("  \\____/ \\___|\\___| \\_/ \\___||___/ \n\n");
+  Serial.println("Jeeves v1.2.0 - James Patterson (M1DST) - November 2017\n");
+  Serial.println("An automated multiplier bell for amateur radio contests.\n");
+  Serial.println("Website: http://www.m1dst.co.uk");
+  Serial.println("Twitter: @m1dst\n\n");
 }
 
-// Checks the packet contents and sets the LED pattern based on the multiplier status.
-void processN1MMPacket()
-{
-    char* output = NULL;
-    char b[] = "<contactinfo>";
-    output = strstr(incomingPacket, b);
 
-    // Check if the packet received is an N1MM Plus ContactInfo broadcast.
-    // http://n1mm.hamdocs.com/tiki-index.php?page=UDP+Broadcasts
-    if (output) {
-        String isMultiplier1 = xmlTakeParam(incomingPacket, "ismultiplier1");
-        String isMultiplier2 = xmlTakeParam(incomingPacket, "ismultiplier2");
-        String isMultiplier3 = xmlTakeParam(incomingPacket, "ismultiplier3");
-
-        if (isMultiplier1 == "1" && isMultiplier2 == "0" && isMultiplier3 == "0") {
-            // Set the LEDs to be all on and red.
-            ws2812fx.setColor(0xFF0000);
-            ws2812fx.setMode(FX_MODE_STATIC);
-            soundBell(true);
-            last_change = now;
-        }
-        else if (isMultiplier1 == "0" && isMultiplier2 == "1" && isMultiplier3 == "0") {
-            // Set the LEDs to be all on and blue.
-            ws2812fx.setColor(0x0000FF);
-            ws2812fx.setMode(FX_MODE_STATIC);
-            soundBell(true);
-            last_change = now;
-        }
-        else if (isMultiplier1 == "0" && isMultiplier2 == "0" && isMultiplier3 == "1") {
-            // Set the LEDs to be all on and green.
-            ws2812fx.setColor(0x00FF00);
-            ws2812fx.setMode(FX_MODE_STATIC);
-            soundBell(true);
-            last_change = now;
-        }
-        else if (isMultiplier1 == "1" && isMultiplier2 == "1" && isMultiplier3 == "0") {
-            // Red & Blue
-            ws2812fx.setMode(FX_MODE_RUNNING_RED_BLUE);
-            soundBell(true);
-            last_change = now;
-        }
-        else if (isMultiplier1 == "0" && isMultiplier2 == "1" && isMultiplier3 == "1") {
-            //Green & Blue
-            ws2812fx.setMode(FX_MODE_RUNNING_GREEN_BLUE);
-            soundBell(true);
-            last_change = now;
-        }
-        else if (isMultiplier1 == "1" && isMultiplier2 == "0" && isMultiplier3 == "1") {
-            // Red & Green
-            ws2812fx.setMode(FX_MODE_MERRY_CHRISTMAS);
-            soundBell(true);
-            last_change = now;
-        }
-        else if (isMultiplier1 == "1" && isMultiplier2 == "1" && isMultiplier3 == "1") {
-            // Rainbow
-            ws2812fx.setMode(FX_MODE_CHASE_RAINBOW);
-            soundBell(true);
-            last_change = now;
-        }
-        #ifdef DISPLAY_EVERY_QSO || SOUND_EVERY_QSO
-        else {
-            #ifdef DISPLAY_EVERY_QSO
-            ws2812fx.setMode(FX_MODE_RUNNING_LIGHTS);
-            #endif
-            #ifdef SOUND_EVERY_QSO
-            soundBell(true);
-            #endif
-            last_change = now;
-        }
-        #else
-        else {
-            // Set the LEDs to be all on and white.
-            ws2812fx.setColor(0xFFFFFF);
-            ws2812fx.setMode(FX_MODE_STATIC);
-            soundBell(false);
-            last_change = now;
-        }
-        #endif
-
-    }
-}
-
-void soundBell(bool enable)
-{
-    #ifdef RELAY_INVERTED
-    digitalWrite(RELAY_PIN, !enable); 
-    #else
-    digitalWrite(RELAY_PIN, enable); 
-    #endif
-}
