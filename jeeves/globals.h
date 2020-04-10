@@ -14,7 +14,8 @@ extern unsigned long now;
 extern WS2812FX ws2812fx;
 #endif
 
-void soundBell(bool enable);
+void soundBell(int count);
+void append(char* s, char c);
 
 #endif
 

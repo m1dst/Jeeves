@@ -52,13 +52,22 @@ void WinTest::processPacket(char * incomingPacket)
   {
 #ifdef DISPLAY_EVERY_QSO || SOUND_EVERY_QSO
 #ifdef DISPLAY_EVERY_QSO
+    #ifdef ENABLE_LEDS
     ws2812fx.setMode(FX_MODE_RUNNING_LIGHTS);
+    #endif
 #endif
 #ifdef SOUND_EVERY_QSO
-    soundBell(true);
+    soundBell(1);
 #endif
     last_change = now;
 #endif
+  }
+
+  // Check if the packet is a gab message.  eg: GAB: "STN1" "" "test"
+  if (strstr(incomingPacket, "GAB: "))
+  {
+    // Extract the message
+    soundBell(1);
   }
 
   // Check if the packet is a summary record.
@@ -163,54 +172,68 @@ void WinTest::processPacket(char * incomingPacket)
 
       if (isMultiplier1 && !isMultiplier2 && !isMultiplier3 ) {
         Serial.printf("MULT 1:0:0 (%s)\n", NAME);
+        #ifdef ENABLE_LEDS
         // Set the LEDs to be all on and red.
         ws2812fx.setColor(0xFF0000);
         ws2812fx.setMode(FX_MODE_STATIC);
-        soundBell(true);
+        #endif
+        soundBell(1);
         last_change = now;
       }
       else if (!isMultiplier1 && isMultiplier2 && !isMultiplier3) {
         Serial.printf("MULT 0:1:0 (%s)\n", NAME);
+        #ifdef ENABLE_LEDS
         // Set the LEDs to be all on and blue.
         ws2812fx.setColor(0x0000FF);
         ws2812fx.setMode(FX_MODE_STATIC);
-        soundBell(true);
+        #endif
+        soundBell(1);
         last_change = now;
       }
       else if (!isMultiplier1 && !isMultiplier2 && isMultiplier3) {
         Serial.printf("MULT 0:0:1 (%s)\n", NAME);
+        #ifdef ENABLE_LEDS
         // Set the LEDs to be all on and green.
         ws2812fx.setColor(0x00FF00);
         ws2812fx.setMode(FX_MODE_STATIC);
-        soundBell(true);
+        #endif
+        soundBell(1);
         last_change = now;
       }
       else if (isMultiplier1 && isMultiplier2 && !isMultiplier3 ) {
         Serial.printf("MULT 1:1:0 (%s)\n", NAME);
+        #ifdef ENABLE_LEDS
         // Red & Blue
         ws2812fx.setMode(FX_MODE_RUNNING_RED_BLUE);
-        soundBell(true);
+        #endif
+        soundBell(1);
         last_change = now;
       }
       else if (!isMultiplier1 && isMultiplier2 && isMultiplier3 ) {
         Serial.printf("MULT 0:1:1 (%s)\n", NAME);
-        //Green & Blue
+        #ifdef ENABLE_LEDS
+        // Green & Blue
         ws2812fx.setMode(FX_MODE_RUNNING_GREEN_BLUE);
-        soundBell(true);
+        #endif
+        soundBell(1);
         last_change = now;
       }
       else if (isMultiplier1 && !isMultiplier2 && isMultiplier3 ) {
         Serial.printf("MULT 1:0:1 (%s)\n", NAME);
+        #ifdef ENABLE_LEDS
         // Red & Green
         ws2812fx.setMode(FX_MODE_MERRY_CHRISTMAS);
-        soundBell(true);
+        #endif
+        soundBell(1);
         last_change = now;
       }
       else if (isMultiplier1 && isMultiplier2 && isMultiplier3 ) {
         Serial.printf("MULT 1:1:1 (%s)\n", NAME);
+        #ifdef ENABLE_LEDS
         // Rainbow
         ws2812fx.setMode(FX_MODE_CHASE_RAINBOW);
-        soundBell(true);
+        #endif
+        soundBell(1);
         last_change = now;
       }
 
